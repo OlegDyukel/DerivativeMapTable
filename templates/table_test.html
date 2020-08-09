@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+</head>
+<body>
+<div class="p-5">
+<table class="table table-hover table-sm">
+  <thead>
+    <tr>
+      <th scope="col">Underlying</th>
+      {% for column in dict_table["RTS"].keys() %}
+      <th scope="col">{{ column }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+  {% for key_undrl, value in dict_table.items() %}
+    <tr>
+      <th scope="row">{{ key_undrl }}</th>
+      {% for key_month, sub_value in value.items() %}
+       {% if sub_value["cell"]["cell_type"] != '' %}
+      <td style="text-align:center" class="table-info">
+        <!-- Button trigger modal -->
+            <button type="button" class="btn-outline-dark btn-sm" data-toggle="modal" data-target={{ "#{}".format(sub_value["cell"]["cell_name"]) }}>
+              {{ sub_value["cell"]["cell_type"] }}
+            </button>
+            <!-- Modal -->
+            <div class="modal bd-example-modal-lg" id={{ sub_value["cell"]["cell_name"] }} tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Инструменты {{ key_undrl }} с исполнением {{ key_month }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div style="text-align:left" class="modal-body">
+                    <h5>Фьючерсы:</h5>
+                    {% if sub_value["instruments"]["futures"] %}
+                    {% for contract in sub_value["instruments"]["futures"] %}
+                    <p><a href={{ "https://www.moex.com/ru/contract.aspx?code={}".format(contract["short_ticker"]) }}>{{ contract["ticker"] }}</a>{{ " открыто {:,} контрактов; исполняется {}".format(contract["OI"], contract["exp_date"].strftime("%d %B %Y")) }}</p>
+                    {% endfor %}
+                    {% else %}
+                    <p>нет фьючерсов с исполнением в данном месяце, либо они уже исполнились</p>
+                    {% endif %}
+                    <hr>
+                    <h5>Опционы:</h5>
+                    {% if sub_value["instruments"]["options"] %}
+                    {% for contract in sub_value["instruments"]["options"] %}
+                    <p><a href={{ "https://www.moex.com/ru/contract.aspx?code={}".format(contract["short_ticker"]) }}>{{ contract["ticker"] }}</a>{{ " открыто {:,} контрактов; исполняется {}".format(contract["OI"], contract["exp_date"].strftime("%d %B %Y")) }}</p>
+                    {% endfor %}
+                    {% else %}
+                    <p>нет опционов с исполнением в данном месяце, либо они уже исполнились</p>
+                    {% endif %}
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+      </td>
+        {% else %}
+      <td></td>
+        {% endif %}
+       {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>
