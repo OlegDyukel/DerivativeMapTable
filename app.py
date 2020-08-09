@@ -15,7 +15,7 @@ def index():
     # In: d_table["BR"]["2020 Dec"]
     # Out:    {'cell': {'cell_OI': '0', 'cell_name': 'BR 2020 Dec', 'cell_type': 0},
     # Out:     'instruments': {'futures': [], 'options': []}}
-    return render_template("table_test.html",
+    return render_template("table.html",
                            dict_color_cells=dict_color_cells,
                            dict_table=dict_table,
                            time_upd=datetime.datetime.now())
