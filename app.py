@@ -26,4 +26,4 @@ if __name__ == "__main__":
 
 # разделить инструменты на исполняющиеся в пром и вк
 # links of card: https://www.moex.com/ru/contract.aspx?code=RI130000BG0E
-# links of desk: https://www.moex.com/ru/derivatives/optionsdeskstat.aspx?code=RTS-9.20M300720CA
+# links of desk: https://www.moex.com/ru/derivatives/optionsdesk.aspx?code=RTS-9.20

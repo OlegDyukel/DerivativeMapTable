@@ -57,25 +57,26 @@ def short_number(number):
 
 
 def get_data(exp_date=None):
-    columns_input = ["SECID", "SHORTNAME", "LASTTRADEDATE", "ASSETCODE",
-                     "PREVOPENPOSITION", "PREVSETTLEPRICE",
+    columns_input = ["SECID", "SHORTNAME", "LASTTRADEDATE", "ASSETCODE", "PREVOPENPOSITION", "PREVSETTLEPRICE",
                      "MINSTEP", "STEPPRICE"]
 
     # futures
-    url_fut = "https://iss.moex.com/iss/engines/futures/markets/forts/securities.json?iss.only=securities&securities.columns={}".format(','.join(columns_input))
+    url_fut = "https://iss.moex.com/iss/engines/futures/markets/forts/securities.json?iss.only=securities&securities.columns={}".format(
+        ','.join(columns_input))
     r_fut = requests.get(url_fut)
     data_fut = r_fut.json()["securities"]["data"]
     columns_fut = r_fut.json()["securities"]["columns"]
     df_fut = pd.DataFrame(data_fut, columns=columns_fut)
 
     # options
-    url_opt = "https://iss.moex.com/iss/engines/futures/markets/options/securities.json?iss.only=securities&securities.columns={}".format(",".join(columns_input))
+    url_opt = "https://iss.moex.com/iss/engines/futures/markets/options/securities.json?iss.only=securities&securities.columns={}".format(
+        ",".join(columns_input))
     r_opt = requests.get(url_opt)
     data_opt = r_opt.json()["securities"]["data"]
     columns_opt = r_opt.json()["securities"]["columns"]
     df_opt_raw = pd.DataFrame(data_opt, columns=columns_opt)
 
-    # replacing NaN data
+    # deleting NaN data
     df_fut = df_fut[-df_fut["PREVOPENPOSITION"].isnull()]
     df_opt_raw = df_opt_raw[-df_opt_raw["PREVOPENPOSITION"].isnull()]
 
@@ -87,30 +88,31 @@ def get_data(exp_date=None):
 
     # getting STEPPRICE param for options from futures
     df_opt_raw = df_opt_raw.merge(df_fut[["SHORTNAME", "STEPPRICE"]],
-                                  how="left", left_on="UNDERLYING", right_on="SHORTNAME",
-                                  suffixes=["", "_y"])
+                                  how="left", left_on="UNDERLYING", right_on="SHORTNAME", suffixes=["", "_y"])
 
     # calc OI_RUB
-    df_fut["OI_RUB"] = df_fut["PREVOPENPOSITION"]*df_fut["PREVSETTLEPRICE"]*df_fut["STEPPRICE"]/df_fut["MINSTEP"]
-    df_opt_raw["OI_RUB"] = df_opt_raw["PREVOPENPOSITION"]*df_opt_raw["PREVSETTLEPRICE"]*df_opt_raw["STEPPRICE"]/df_opt_raw["MINSTEP"]
+    df_fut["OI_RUB"] = df_fut["PREVOPENPOSITION"] * df_fut["PREVSETTLEPRICE"] * df_fut["STEPPRICE"] / df_fut["MINSTEP"]
+    df_opt_raw["OI_RUB"] = df_opt_raw["PREVOPENPOSITION"] * df_opt_raw["PREVSETTLEPRICE"] * df_opt_raw["STEPPRICE"] / \
+                           df_opt_raw["MINSTEP"]
 
     # filtering, sorting and grouping
     if exp_date:
-        df_fut = df_fut[df_fut["LASTTRADEDATE"] == exp_date].\
-            sort_values(by=["OI_RUB"], ascending=False)
-        df_opt = df_opt_raw[df_opt_raw["LASTTRADEDATE"] == exp_date].\
-            groupby(["SHORTNAME", "LASTTRADEDATE", "ASSETCODE"]).\
-            agg({"PREVOPENPOSITION": "sum", "OI_RUB": "sum", "SECID": "max", "PREVSETTLEPRICE": "mean"}).\
-            reset_index().sort_values(by=["OI_RUB"], ascending=False)
+        df_fut = df_fut[df_fut["LASTTRADEDATE"] == exp_date].sort_values(by=["PREVOPENPOSITION"], ascending=False)
+        df_opt = df_opt_raw[df_opt_raw["LASTTRADEDATE"] == exp_date].groupby(
+            ["SHORTNAME", "LASTTRADEDATE", "ASSETCODE", "UNDERLYING"]).agg(
+            {"PREVOPENPOSITION": "sum", "OI_RUB": "sum", "SECID": "max",
+             "PREVSETTLEPRICE": "mean"}).reset_index().sort_values(by=["OI_RUB"], ascending=False)
     else:
-        df_fut = df_fut.sort_values(by=["OI_RUB"], ascending=False)
-        df_opt = df_opt_raw.groupby(["SHORTNAME", "LASTTRADEDATE", "ASSETCODE"]).\
-            agg({"PREVOPENPOSITION": "sum", "OI_RUB": "sum", "SECID": "max", "PREVSETTLEPRICE": "mean"}).\
-            reset_index().sort_values(by=["OI_RUB"], ascending=False)
+        df_fut = df_fut.sort_values(by=["PREVOPENPOSITION"], ascending=False)
+        df_opt = df_opt_raw.groupby(["SHORTNAME", "LASTTRADEDATE", "ASSETCODE", "UNDERLYING"]).agg(
+            {"PREVOPENPOSITION": "sum", "OI_RUB": "sum", "SECID": "max",
+             "PREVSETTLEPRICE": "mean"}).reset_index().sort_values(by=["OI_RUB"], ascending=False)
 
     # OI_PERCENTAGE(sum_undrl = 100%)
-    df_fut["OI_PERCENTAGE"] = 100*df_fut[["PREVOPENPOSITION"]]/df_fut[["ASSETCODE", "PREVOPENPOSITION"]].groupby("ASSETCODE").transform("sum")
-    df_opt["OI_PERCENTAGE"] = 100*df_opt[["PREVOPENPOSITION"]]/df_opt[["ASSETCODE", "PREVOPENPOSITION"]].groupby("ASSETCODE").transform("sum")
+    df_fut["OI_PERCENTAGE"] = 100 * df_fut[["PREVOPENPOSITION"]] / df_fut[["ASSETCODE", "PREVOPENPOSITION"]].groupby(
+        "ASSETCODE").transform("sum")
+    df_opt["OI_PERCENTAGE"] = 100 * df_opt[["PREVOPENPOSITION"]] / df_opt[["ASSETCODE", "PREVOPENPOSITION"]].groupby(
+        "ASSETCODE").transform("sum")
 
     # transforming date type
     df_fut["LASTTRADEDATE"] = pd.to_datetime(df_fut["LASTTRADEDATE"])
@@ -119,10 +121,12 @@ def get_data(exp_date=None):
     df_fut["LASTTRADEMONTH"] = df_fut["LASTTRADEDATE"].apply(get_year_month)
     df_opt["LASTTRADEMONTH"] = df_opt["LASTTRADEDATE"].apply(get_year_month)
 
-    columns_output = ["SECID", "SHORTNAME", "LASTTRADEDATE", "ASSETCODE", "PREVOPENPOSITION",
-                      "PREVSETTLEPRICE", "OI_RUB", "OI_PERCENTAGE", "LASTTRADEMONTH"]
+    columns_output_fut = ["SECID", "SHORTNAME", "LASTTRADEDATE", "ASSETCODE", "PREVOPENPOSITION",
+                          "PREVSETTLEPRICE", "OI_RUB", "OI_PERCENTAGE", "LASTTRADEMONTH"]
+    columns_output_opt = ["SECID", "SHORTNAME", "LASTTRADEDATE", "ASSETCODE", "PREVOPENPOSITION",
+                          "PREVSETTLEPRICE", "OI_RUB", "OI_PERCENTAGE", "LASTTRADEMONTH", "UNDERLYING"]
 
-    return {"futures": df_fut[columns_output], "options": df_opt[columns_output]}
+    return {"futures": df_fut[columns_output_fut], "options": df_opt[columns_output_opt]}
 
 
 def get_table(data_FO_dict):
@@ -138,37 +142,39 @@ def get_table(data_FO_dict):
 
     # initializing table
     d = {}
-    columns = ["SECID", "SHORTNAME", "LASTTRADEDATE", "PREVOPENPOSITION", "OI_RUB", "OI_PERCENTAGE"]
+    columns_fut = ["SECID", "SHORTNAME", "LASTTRADEDATE", "PREVOPENPOSITION", "OI_RUB", "OI_PERCENTAGE"]
+    columns_opt = ["SECID", "SHORTNAME", "LASTTRADEDATE", "PREVOPENPOSITION", "OI_RUB", "OI_PERCENTAGE", "UNDERLYING"]
 
     # filling cells
     for row in df_fut["ASSETCODE"].unique():
         d[row] = {}
         for col in dates_lst:
-            d[row][col] = {"cell": {"cell_name": "{}{}".format(row, col.replace(" ", "")),
-                                    "cell_type": '', "cell_OI": 0},
-                           "instruments": {"futures": [], "options": []}}
+            d[row][col] = {
+                "cell": {"cell_name": "{}{}".format(row, col.replace(" ", "")), "cell_type": '', "cell_OI": 0},
+                "instruments": {"futures": [], "options": []}}
             cell_OI = 0
             cell_type = set()
 
-            for i in df_fut[(df_fut["ASSETCODE"] == row) & (df_fut["LASTTRADEMONTH"] == col)][columns].values:
-                cell_OI += int(i[3])
+            for i in df_fut[(df_fut["ASSETCODE"] == row) & (df_fut["LASTTRADEMONTH"] == col)][columns_fut].values:
+                cell_OI += i[3]
                 cell_type.add("F")
                 d[row][col]["instruments"]["futures"].append({"short_ticker": i[0],
                                                               "ticker": i[1],
                                                               "exp_date": i[2],
-                                                              "OI": int(i[3]),
+                                                              "OI": i[3],
                                                               "OI_RUB": i[4],
                                                               "OI_PERCENTAGE": i[5]})
 
-            for i in df_opt[(df_opt["ASSETCODE"] == row) & (df_opt["LASTTRADEMONTH"] == col)][columns].values:
-                cell_OI += int(i[3])
+            for i in df_opt[(df_opt["ASSETCODE"] == row) & (df_opt["LASTTRADEMONTH"] == col)][columns_opt].values:
+                cell_OI += i[3]
                 cell_type.add("O")
                 d[row][col]["instruments"]["options"].append({"short_ticker": i[0],
                                                               "ticker": i[1],
                                                               "exp_date": i[2],
-                                                              "OI": int(i[3]),
+                                                              "OI": i[3],
                                                               "OI_RUB": i[4],
-                                                              "OI_PERCENTAGE": i[5]})
+                                                              "OI_PERCENTAGE": i[5],
+                                                              "UNDERLYING": i[6]})
 
             if len(cell_type) > 0:
                 d[row][col]["cell"]["cell_type"] = "+".join(sorted([e for e in cell_type]))

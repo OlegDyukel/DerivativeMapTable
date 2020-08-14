@@ -7,7 +7,11 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-
+ <style>
+   table {
+    width: 100%; /* Ширина таблицы */
+   }
+  </style>
 </head>
 <body>
 <div class="p-5">
@@ -16,7 +20,7 @@
     <tr>
       <th scope="col">Underlying</th>
       {% for column in dict_table["RTS"].keys() %}
-      <th scope="col">{{ column }}</th>
+      <th style="text-align:center" scope="col"><font size=-1>{{ column }}</font></th>
       {% endfor %}
     </tr>
   </thead>
@@ -29,7 +33,7 @@
       <td style="text-align:center" class="table-info">
         <!-- Button trigger modal -->
             <button type="button" class="btn-outline-dark btn-sm" data-toggle="modal" data-target={{ "#{}".format(sub_value["cell"]["cell_name"]) }}>
-              {{ sub_value["cell"]["cell_type"] }}
+          <font size=-1>{{ sub_value["cell"]["cell_type"] }}</font>
             </button>
             <!-- Modal -->
             <div class="modal bd-example-modal-lg" id={{ sub_value["cell"]["cell_name"] }} tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -45,19 +49,19 @@
                     <h5>Фьючерсы:</h5>
                     {% if sub_value["instruments"]["futures"] %}
                     {% for contract in sub_value["instruments"]["futures"] %}
-                    <p><a href={{ "https://www.moex.com/ru/contract.aspx?code={}".format(contract["short_ticker"]) }}>{{ contract["ticker"] }}</a>{{ " открыто {:,} контрактов; исполняется {}".format(contract["OI"], contract["exp_date"].strftime("%d %B %Y")) }}</p>
+                    <p>{{ "{} - открыто {:,} контрактов, исполняется {}".format(contract["ticker"], contract["OI"], contract["exp_date"].strftime("%d-%m-%Y")) }} (<a href={{ "https://www.moex.com/ru/contract.aspx?code={}".format(contract["short_ticker"]) }}>параметры</a>)</p>
                     {% endfor %}
                     {% else %}
-                    <p>нет фьючерсов с исполнением в данном месяце, либо они уже исполнились</p>
+                    <p>нет фьючерсов</p>
                     {% endif %}
                     <hr>
                     <h5>Опционы:</h5>
                     {% if sub_value["instruments"]["options"] %}
                     {% for contract in sub_value["instruments"]["options"] %}
-                    <p><a href={{ "https://www.moex.com/ru/contract.aspx?code={}".format(contract["short_ticker"]) }}>{{ contract["ticker"] }}</a>{{ " открыто {:,} контрактов; исполняется {}".format(contract["OI"], contract["exp_date"].strftime("%d %B %Y")) }}</p>
+                    <p>{{ "{} - открыто {:,} контрактов, исполняется {}".format(contract["ticker"], contract["OI"], contract["exp_date"].strftime("%d-%m-%Y")) }} (<a href={{ "https://www.moex.com/ru/contract.aspx?code={}".format(contract["short_ticker"]) }}>параметры</a>/<a href={{ "https://www.moex.com/ru/derivatives/optionsdesk.aspx?code={}#{}".format(contract["UNDERLYING"], contract["exp_date"].strftime("%d%m%Y")) }}>доска</a>)</p>
                     {% endfor %}
                     {% else %}
-                    <p>нет опционов с исполнением в данном месяце, либо они уже исполнились</p>
+                    <p>нет опционов</p>
                     {% endif %}
                   </div>
                   <div class="modal-footer">
