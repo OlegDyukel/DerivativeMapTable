@@ -7,6 +7,9 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<title>Derivative map</title>
+
  <style>
    table {
     width: 100%; /* Ширина таблицы */
@@ -30,9 +33,9 @@
       <th scope="row">{{ key_undrl }}</th>
       {% for key_month, sub_value in value.items() %}
        {% if sub_value["cell"]["cell_type"] != '' %}
-      <td style="text-align:center" class="table-info">
+      <td style="text-align:center" bgcolor={{ sub_value["cell"]["cell_color"] }}>
         <!-- Button trigger modal -->
-            <button type="button" class="btn-outline-dark btn-sm" data-toggle="modal" data-target={{ "#{}".format(sub_value["cell"]["cell_name"]) }}>
+            <button type="button" class="btn btn-outline-dark btn-sm" data-toggle="modal" data-target={{ "#{}".format(sub_value["cell"]["cell_name"]) }}>
           <font size=-1>{{ sub_value["cell"]["cell_type"] }}</font>
             </button>
             <!-- Modal -->
