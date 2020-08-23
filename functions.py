@@ -5,7 +5,6 @@ import re
 
 
 
-
 def get_updates():
     url = get_url() + "getupdates"
     r = requests.get(url)
@@ -40,6 +39,11 @@ def get_option_underlying(option_name):
 
 def get_year_month(date):
     return date.strftime("%Y %b")
+
+
+def round_up_log(number, base, n_groups):
+    return int(np.log(number + 1.0)/(np.log(base + 1.0001)/(n_groups-1)) - 0.00001) \
+            + (np.log(number + 1.0)%(np.log(base + 1.0001)/(n_groups-1))>0)
 
 
 def short_number(number):
@@ -121,6 +125,9 @@ def get_data(exp_date=None):
     df_fut["LASTTRADEMONTH"] = df_fut["LASTTRADEDATE"].apply(get_year_month)
     df_opt["LASTTRADEMONTH"] = df_opt["LASTTRADEDATE"].apply(get_year_month)
 
+    # OI_contracts to int
+    df_fut["PREVOPENPOSITION"] = df_fut["PREVOPENPOSITION"].apply(int)
+
     columns_output_fut = ["SECID", "SHORTNAME", "LASTTRADEDATE", "ASSETCODE", "PREVOPENPOSITION",
                           "PREVSETTLEPRICE", "OI_RUB", "OI_PERCENTAGE", "LASTTRADEMONTH"]
     columns_output_opt = ["SECID", "SHORTNAME", "LASTTRADEDATE", "ASSETCODE", "PREVOPENPOSITION",
@@ -133,12 +140,20 @@ def get_table(data_FO_dict):
     df_fut = data_FO_dict["futures"]
     df_opt = data_FO_dict["options"]
 
+    # cell - max OI_RUB for coloring the cell
+    cell_max_OI_rub = pd.concat([df_fut[["LASTTRADEMONTH", "ASSETCODE", "OI_RUB"]],
+                                 df_opt[["LASTTRADEMONTH", "ASSETCODE", "OI_RUB"]]]) \
+        .groupby(["LASTTRADEMONTH", "ASSETCODE"]).sum().max().values[0]
+
+    d_colors = {0: "#f8f9fa", 1: "#e9ecef", 2: "#dee2e6", 3: "#ced4da", 4: "#adb5bd", 5: "#868e96"}
+    n_colors = len(d_colors)
+
     # getting columns
     dates_lst = []
     for dt in pd.period_range(start=df_fut["LASTTRADEDATE"].min(),
                               end=df_fut["LASTTRADEDATE"].max(),
                               freq='M'):
-        dates_lst.append(dt.strftime("%Y %b"))
+        dates_lst.append(get_year_month(dt))
 
     # initializing table
     d = {}
@@ -150,13 +165,16 @@ def get_table(data_FO_dict):
         d[row] = {}
         for col in dates_lst:
             d[row][col] = {
-                "cell": {"cell_name": "{}{}".format(row, col.replace(" ", "")), "cell_type": '', "cell_OI": 0},
+                "cell": {"cell_name": "{}{}".format(row, col.replace(" ", "")), "cell_type": '', "cell_OI": 0,
+                         "cell_color": ''},
                 "instruments": {"futures": [], "options": []}}
             cell_OI = 0
             cell_type = set()
+            cell_OI_rub = 0
 
             for i in df_fut[(df_fut["ASSETCODE"] == row) & (df_fut["LASTTRADEMONTH"] == col)][columns_fut].values:
                 cell_OI += i[3]
+                cell_OI_rub += i[4]
                 cell_type.add("F")
                 d[row][col]["instruments"]["futures"].append({"short_ticker": i[0],
                                                               "ticker": i[1],
@@ -167,6 +185,7 @@ def get_table(data_FO_dict):
 
             for i in df_opt[(df_opt["ASSETCODE"] == row) & (df_opt["LASTTRADEMONTH"] == col)][columns_opt].values:
                 cell_OI += i[3]
+                cell_OI_rub += i[4]
                 cell_type.add("O")
                 d[row][col]["instruments"]["options"].append({"short_ticker": i[0],
                                                               "ticker": i[1],
@@ -179,6 +198,10 @@ def get_table(data_FO_dict):
             if len(cell_type) > 0:
                 d[row][col]["cell"]["cell_type"] = "+".join(sorted([e for e in cell_type]))
                 d[row][col]["cell"]["cell_OI"] = short_number(cell_OI)
+                try:
+                    d[row][col]["cell"]["cell_color"] = d_colors[round_up_log(cell_OI_rub, cell_max_OI_rub, n_colors)]
+                except KeyError:
+                    d[row][col]["cell"]["cell_color"] = d_colors[n_colors - 1]
 
             # In: d_table["BR"]["2020 Dec"]
             # Out:    {'cell': {'cell_OI': '0', 'cell_name': 'BR 2020 Dec', 'cell_type': 0},
