@@ -14,7 +14,7 @@ def index():
     # Out:     'instruments': {'futures': [], 'options': []}}
     return render_template("table.html",
                            dict_table=dict_table,
-                           time_upd=datetime.datetime.now())
+                           time_upd=datetime.datetime.now().strftime("%Y-%m-%d"))
 
 if __name__ == "__main__":
     app.run()

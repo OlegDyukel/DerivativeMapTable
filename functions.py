@@ -127,6 +127,7 @@ def get_data(exp_date=None):
 
     # OI_contracts to int
     df_fut["PREVOPENPOSITION"] = df_fut["PREVOPENPOSITION"].apply(int)
+    df_opt["PREVOPENPOSITION"] = df_opt["PREVOPENPOSITION"].apply(int)
 
     columns_output_fut = ["SECID", "SHORTNAME", "LASTTRADEDATE", "ASSETCODE", "PREVOPENPOSITION",
                           "PREVSETTLEPRICE", "OI_RUB", "OI_PERCENTAGE", "LASTTRADEMONTH"]
@@ -196,7 +197,13 @@ def get_table(data_FO_dict):
                                                               "UNDERLYING": i[6]})
 
             if len(cell_type) > 0:
-                d[row][col]["cell"]["cell_type"] = "+".join(sorted([e for e in cell_type]))
+                if len(cell_type) == 2:
+                    d[row][col]["cell"]["cell_type"] = "/".join(sorted([e for e in cell_type]))
+                elif [e for e in cell_type][0] == 'F':
+                    d[row][col]["cell"]["cell_type"] = "F/-"
+                elif [e for e in cell_type][0] == 'O':
+                    d[row][col]["cell"]["cell_type"] = "-/O"
+
                 d[row][col]["cell"]["cell_OI"] = short_number(cell_OI)
                 try:
                     d[row][col]["cell"]["cell_color"] = d_colors[round_up_log(cell_OI_rub, cell_max_OI_rub, n_colors)]
