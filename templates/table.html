@@ -24,31 +24,29 @@
   <ul class="list-unstyled">
     <ul>
     <li>Карта экспираций (исполнений) фьючерсов и опционов строится автоматически и ежедневно на основе данных с биржи (последнее обновление было {{ time_upd }}).</li>
-    <li>Способ использования: выбираете базовый актив (в строках), затем год и месяц экспирации финансовых инструментов (в столбца) и на их пересечении находите ячейку,
+    <li>Способ использования: выбираете базовый актив (в строках), затем год и месяц экспирации финансовых инструментов (в столбцах) и на их пересечении находите ячейку,
     которая содержит тикер, количество открытых контрактов, дату исполнения, а также ссылки на параметры. </li>
     <li>Символы "F" (фьючерсы) и "O" (опционы) определяют тип инструментов в ячейке.</li>
-    <li>Интенсивностью цвета отображается количество открытых контрактов.</li>
+    <li><div class="row">
+        <div class="col-8">Интенсивностью цвета отображается относительное количество открытых контрактов:</div>
+        <div class="col-4">
+            <table class="table table-sm">
+            <tbody>
+              <tr style="text-align:center">
+                <td bgcolor=#f8f9fa>MIN</td>
+                <td bgcolor=#e9ecef><font color=#e9ecef>20 %</font></td>
+                <td bgcolor=#dee2e6><font color=#dee2e6>40 %</font></td>
+                <td bgcolor=#ced4da><font color=#ced4da>60 %</font></td>
+                <td bgcolor=#adb5bd><font color=#adb5bd>80 %</font></td>
+                <td bgcolor=#868e96><font color=#ffffff>MAX</font></td>
+              </tr>
+            </tbody>
+            </table>
+        </div>
+        </div>
+      </li>
     </ul>
   </ul>
-</div>
-
-<div class="container row px-5">
-   <div class="col-6 text-right">Минимум<br>контрактов</div>
-   <div class="col-2">
-     <table class="table table-striped table-sm">
-        <tbody>
-          <tr>
-            <td bgcolor=#f8f9fa></td>
-            <td bgcolor=#e9ecef></td>
-            <td bgcolor=#dee2e6></td>
-            <td bgcolor=#ced4da></td>
-            <td bgcolor=#adb5bd></td>
-            <td bgcolor=#868e96></td>
-          </tr>
-        </tbody>
-      </table>
-   </div>
-   <div class="col-4">Максимум<br>контрактов</div>
 </div>
 
 <div class="px-5">
